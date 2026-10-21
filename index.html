@@ -1,129 +1,372 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Addition and Subtraction Speed Challenge</title>
-<style>
-*{box-sizing:border-box}
-body{font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;color:#222;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
-main{width:100%;max-width:540px;background:#fff;border:1px solid #ddd;border-radius:16px;padding:clamp(20px,5vw,34px);text-align:center;box-shadow:0 4px 18px #0000000d}
-h1{font-size:clamp(1.4rem,5vw,2rem);margin:0 0 16px}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.stat{background:#f4f6f8;border:1px solid #ddd;border-radius:12px;padding:12px}
-.stat-label{font-size:.9rem;color:#666;margin-bottom:4px}
-.stat-value{font-size:1.8rem;font-weight:700}
-#timer.warning{color:#c62828}
-#question{font-size:clamp(2.8rem,12vw,4.5rem);font-weight:700;margin:24px 0}
-.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.answer{display:block;visibility:visible;opacity:1;border:2px solid #2468b4;border-radius:12px;background:#eaf3ff;color:#174c86;font-size:clamp(1.5rem,6vw,2rem);font-weight:700;padding:16px 10px;min-height:70px;cursor:pointer}
-.answer:hover:not(:disabled){background:#d6e8ff}
-button:focus-visible{outline:3px solid #f0a800;outline-offset:3px}
-button:disabled{cursor:default;opacity:.6}
-#feedback{min-height:32px;margin-top:20px;font-size:1.1rem;font-weight:700}
-#start,#restart{margin-top:14px;border:0;border-radius:10px;background:#2468b4;color:white;font-size:1.1rem;font-weight:700;padding:13px 20px;cursor:pointer}
-#restart{background:#555}
-#answers.inactive{opacity:.5}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Addition and Subtraction Speed Challenge</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --panel-border: #d5dbe1;
+      --text: #1d2430;
+      --muted: #4b5563;
+      --primary: #1d4f91;
+      --primary-light: #eaf3ff;
+      --primary-hover: #d6e8ff;
+      --danger: #b42318;
+      --success: #146c43;
+      --button-text: #ffffff;
+      --shadow: rgba(15, 23, 42, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      line-height: 1.45;
+    }
+
+    .skip-link {
+      position: absolute;
+      left: 16px;
+      top: -40px;
+      background: var(--primary);
+      color: var(--button-text);
+      padding: 10px 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      z-index: 10;
+      transition: top 0.2s ease;
+    }
+
+    .skip-link:focus {
+      top: 16px;
+    }
+
+    main {
+      width: 100%;
+      max-width: 540px;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: clamp(20px, 5vw, 34px);
+      text-align: center;
+      box-shadow: 0 4px 18px var(--shadow);
+    }
+
+    h1 {
+      font-size: clamp(1.4rem, 5vw, 2rem);
+      margin: 0 0 16px;
+    }
+
+    .instructions {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat {
+      background: var(--bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    #timer.warning {
+      color: var(--danger);
+    }
+
+    #question {
+      font-size: clamp(2.8rem, 12vw, 4.5rem);
+      font-weight: 700;
+      margin: 24px 0;
+      line-height: 1.1;
+    }
+
+    .answers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .answer {
+      display: block;
+      visibility: visible;
+      opacity: 1;
+      border: 2px solid var(--primary);
+      border-radius: 12px;
+      background: var(--primary-light);
+      color: #174c86;
+      font-size: clamp(1.5rem, 6vw, 2rem);
+      font-weight: 700;
+      padding: 16px 10px;
+      min-height: 68px;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    }
+
+    .answer:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    .answer:focus-visible,
+    #start:focus-visible,
+    #restart:focus-visible {
+      outline: 3px solid #f0a800;
+      outline-offset: 3px;
+    }
+
+    .answer:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
+
+    #feedback {
+      min-height: 32px;
+      margin-top: 20px;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    #start,
+    #restart {
+      margin-top: 14px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--primary);
+      color: var(--button-text);
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 13px 20px;
+      cursor: pointer;
+    }
+
+    #restart {
+      background: #555;
+    }
+
+    #answers.inactive {
+      opacity: 0.55;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .answer, .skip-link { transition: none; }
+    }
+
+    @media (max-width: 420px) {
+      .answers { gap: 10px; }
+      .answer { min-height: 60px; padding: 14px 8px; }
+    }
+  </style>
 </head>
 <body>
-<main>
-  <h1>Addition and Subtraction</h1>
-  <div class="stats">
-    <div class="stat"><div class="stat-label">Time left</div><div class="stat-value" id="timer">1:00</div></div>
-    <div class="stat"><div class="stat-label">Score</div><div class="stat-value" id="score">0</div></div>
-  </div>
-  <div id="question" aria-live="polite">Ready?</div>
-  <div class="answers inactive" id="answers">
-    <button class="answer" type="button" disabled>—</button>
-    <button class="answer" type="button" disabled>—</button>
-    <button class="answer" type="button" disabled>—</button>
-    <button class="answer" type="button" disabled>—</button>
-  </div>
-  <div id="feedback" role="status" aria-live="polite">Press Start to begin your one-minute challenge.</div>
-  <button id="start" type="button">Start challenge</button>
-  <button id="restart" type="button" hidden>Play again</button>
-</main>
-<script>
-(function(){
-  let score=0, correctAnswer=0, running=false, answered=false, secondsLeft=60, interval=null;
-  const get=id=>document.getElementById(id);
-  function updateTimer(){
-    get('timer').textContent=Math.floor(secondsLeft/60)+':'+String(secondsLeft%60).padStart(2,'0');
-    get('timer').classList.toggle('warning',secondsLeft<=10);
-  }
-  function makeQuestion(){
-    if(!running)return;
-    answered=false;
-    let a,b,op;
-    if(Math.random()<0.5){
-      a=Math.floor(Math.random()*11);
-      b=Math.floor(Math.random()*(21-a));
-      op='+';
-      correctAnswer=a+b;
-    }else{
-      a=Math.floor(Math.random()*21);
-      b=Math.floor(Math.random()*(a+1));
-      op='−';
-      correctAnswer=a-b;
-    }
-    get('question').textContent=a+' '+op+' '+b+' = ?';
-    const choices=[correctAnswer];
-    while(choices.length<4){
-      const n=Math.floor(Math.random()*21);
-      if(!choices.includes(n))choices.push(n);
-    }
-    choices.sort(()=>Math.random()-.5);
-    const container=get('answers');
-    container.innerHTML='';
-    container.classList.remove('inactive');
-    choices.forEach(n=>{
-      const btn=document.createElement('button');
-      btn.type='button';btn.className='answer';btn.textContent=n;
-      btn.addEventListener('click',()=>chooseAnswer(n,btn));
-      container.appendChild(btn);
-    });
-    get('feedback').textContent='Choose the correct answer!';
-  }
-  function chooseAnswer(n,button){
-    if(!running||answered)return;
-    if(n===correctAnswer){
-      score++;get('score').textContent=score;
-      get('feedback').textContent='Correct!';
-      answered=true;
-      get('answers').querySelectorAll('button').forEach(b=>b.disabled=true);
-      // Show a new question immediately after a correct answer.
-      setTimeout(()=>{if(running)makeQuestion();},250);
-    }else{
-      button.disabled=true;
-      get('feedback').textContent='Try again!';
-    }
-  }
-  function finish(){
-    running=false;clearInterval(interval);interval=null;secondsLeft=0;updateTimer();
-    get('question').textContent='Time is up!';
-    get('answers').innerHTML='';
-    get('answers').classList.add('inactive');
-    get('feedback').textContent='You scored '+score+' point'+(score===1?'':'s')+' in one minute. Well done!';
-    get('start').hidden=true;get('restart').hidden=false;
-  }
-  function start(){
-    clearInterval(interval);
-    score=0;secondsLeft=60;running=true;answered=false;
-    get('score').textContent='0';updateTimer();
-    get('start').hidden=true;get('restart').hidden=true;
-    makeQuestion();
-    interval=setInterval(()=>{
-      if(!running)return;
-      secondsLeft--;updateTimer();
-      if(secondsLeft<=0)finish();
-    },1000);
-  }
-  get('start').addEventListener('click',start);
-  get('restart').addEventListener('click',start);
-  updateTimer();
-})();
-</script>
-</main>
+  <a class="skip-link" href="#game">Skip to game</a>
+
+  <main id="game" aria-labelledby="game-title">
+    <h1 id="game-title">Addition and Subtraction</h1>
+    <p class="instructions">Answer as many sums as you can in one minute. Use your mouse or keyboard: press 1 to 4 to choose an answer.</p>
+
+    <div class="stats" aria-label="Game statistics">
+      <div class="stat" aria-live="polite">
+        <div class="stat-label">Time left</div>
+        <div class="stat-value" id="timer" aria-atomic="true">1:00</div>
+      </div>
+      <div class="stat" aria-live="polite">
+        <div class="stat-label">Score</div>
+        <div class="stat-value" id="score" aria-atomic="true">0</div>
+      </div>
+    </div>
+
+    <div id="question" aria-live="polite">Ready?</div>
+
+    <div class="answers inactive" id="answers" role="group" aria-label="Answer choices"></div>
+
+    <div id="feedback" role="status" aria-live="polite" aria-atomic="true">Press Start to begin your one-minute challenge.</div>
+
+    <button id="start" type="button">Start challenge</button>
+    <button id="restart" type="button" hidden>Play again</button>
+  </main>
+
+  <script>
+    (function () {
+      let score = 0,
+          correctAnswer = 0,
+          running = false,
+          answered = false,
+          secondsLeft = 60,
+          interval = null;
+
+      const get = (id) => document.getElementById(id);
+
+      function updateTimer() {
+        const timer = get('timer');
+        timer.textContent = Math.floor(secondsLeft / 60) + ':' + String(secondsLeft % 60).padStart(2, '0');
+        timer.classList.toggle('warning', secondsLeft <= 10);
+      }
+
+      function setFeedback(message) {
+        get('feedback').textContent = message;
+      }
+
+      function makeQuestion() {
+        if (!running) return;
+
+        answered = false;
+
+        let a, b, op;
+        if (Math.random() < 0.5) {
+          a = Math.floor(Math.random() * 11);
+          b = Math.floor(Math.random() * (21 - a));
+          op = '+';
+          correctAnswer = a + b;
+        } else {
+          a = Math.floor(Math.random() * 21);
+          b = Math.floor(Math.random() * (a + 1));
+          op = '−';
+          correctAnswer = a - b;
+        }
+
+        get('question').textContent = a + ' ' + op + ' ' + b + ' = ?';
+
+        const choices = [correctAnswer];
+        while (choices.length < 4) {
+          const n = Math.floor(Math.random() * 21);
+          if (!choices.includes(n)) choices.push(n);
+        }
+        choices.sort(() => Math.random() - 0.5);
+
+        const container = get('answers');
+        container.innerHTML = '';
+        container.classList.remove('inactive');
+
+        choices.forEach((n, index) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'answer';
+          btn.textContent = n;
+          btn.setAttribute('aria-label', 'Answer ' + (index + 1) + ': ' + n);
+          btn.addEventListener('click', () => chooseAnswer(n, btn));
+          container.appendChild(btn);
+        });
+
+        setFeedback('Choose the correct answer!');
+      }
+
+      function chooseAnswer(n, button) {
+        if (!running || answered) return;
+
+        if (n === correctAnswer) {
+          score++;
+          get('score').textContent = score;
+          setFeedback('Correct!');
+          answered = true;
+          get('answers').querySelectorAll('button').forEach((b) => {
+            b.disabled = true;
+          });
+          setTimeout(() => {
+            if (running) makeQuestion();
+          }, 250);
+        } else {
+          button.disabled = true;
+          setFeedback('Try again!');
+        }
+      }
+
+      function finish() {
+        running = false;
+        clearInterval(interval);
+        interval = null;
+        secondsLeft = 0;
+        updateTimer();
+
+        get('question').textContent = 'Time is up!';
+        get('answers').innerHTML = '';
+        get('answers').classList.add('inactive');
+        setFeedback('You scored ' + score + ' point' + (score === 1 ? '' : 's') + ' in one minute. Well done!');
+        get('start').hidden = true;
+        get('restart').hidden = false;
+        get('restart').focus();
+      }
+
+      function start() {
+        clearInterval(interval);
+        score = 0;
+        secondsLeft = 60;
+        running = true;
+        answered = false;
+
+        get('score').textContent = '0';
+        updateTimer();
+        get('start').hidden = true;
+        get('restart').hidden = true;
+        makeQuestion();
+
+        interval = setInterval(() => {
+          if (!running) return;
+          secondsLeft--;
+          updateTimer();
+          if (secondsLeft <= 0) finish();
+        }, 1000);
+      }
+
+      function handleKeyboardSelection(event) {
+        if (!running || answered) return;
+
+        const keyMap = {
+          '1': 0,
+          '2': 1,
+          '3': 2,
+          '4': 3
+        };
+
+        if (event.key in keyMap) {
+          const answers = Array.from(get('answers').querySelectorAll('.answer'));
+          const button = answers[keyMap[event.key]];
+          if (button && !button.disabled) {
+            chooseAnswer(Number(button.textContent), button);
+          }
+        }
+      }
+
+      get('start').addEventListener('click', start);
+      get('restart').addEventListener('click', start);
+      document.addEventListener('keydown', handleKeyboardSelection);
+
+      updateTimer();
+    })();
+  </script>
 </body>
 </html>
