@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Addition and Subtraction Speed Challenge</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;color:#222;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+main{width:100%;max-width:540px;background:#fff;border:1px solid #ddd;border-radius:16px;padding:clamp(20px,5vw,34px);text-align:center;box-shadow:0 4px 18px #0000000d}
+h1{font-size:clamp(1.4rem,5vw,2rem);margin:0 0 16px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:#f4f6f8;border:1px solid #ddd;border-radius:12px;padding:12px}
+.stat-label{font-size:.9rem;color:#666;margin-bottom:4px}
+.stat-value{font-size:1.8rem;font-weight:700}
+#timer.warning{color:#c62828}
+#question{font-size:clamp(2.8rem,12vw,4.5rem);font-weight:700;margin:24px 0}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.answer{display:block;visibility:visible;opacity:1;border:2px solid #2468b4;border-radius:12px;background:#eaf3ff;color:#174c86;font-size:clamp(1.5rem,6vw,2rem);font-weight:700;padding:16px 10px;min-height:70px;cursor:pointer}
+.answer:hover:not(:disabled){background:#d6e8ff}
+button:focus-visible{outline:3px solid #f0a800;outline-offset:3px}
+button:disabled{cursor:default;opacity:.6}
+#feedback{min-height:32px;margin-top:20px;font-size:1.1rem;font-weight:700}
+#start,#restart{margin-top:14px;border:0;border-radius:10px;background:#2468b4;color:white;font-size:1.1rem;font-weight:700;padding:13px 20px;cursor:pointer}
+#restart{background:#555}
+#answers.inactive{opacity:.5}
+</style>
+</head>
+<body>
+<main>
+  <h1>Addition and Subtraction</h1>
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Time left</div><div class="stat-value" id="timer">1:00</div></div>
+    <div class="stat"><div class="stat-label">Score</div><div class="stat-value" id="score">0</div></div>
+  </div>
+  <div id="question" aria-live="polite">Ready?</div>
+  <div class="answers inactive" id="answers">
+    <button class="answer" type="button" disabled>—</button>
+    <button class="answer" type="button" disabled>—</button>
+    <button class="answer" type="button" disabled>—</button>
+    <button class="answer" type="button" disabled>—</button>
+  </div>
+  <div id="feedback" role="status" aria-live="polite">Press Start to begin your one-minute challenge.</div>
+  <button id="start" type="button">Start challenge</button>
+  <button id="restart" type="button" hidden>Play again</button>
+</main>
+<script>
+(function(){
+  let score=0, correctAnswer=0, running=false, answered=false, secondsLeft=60, interval=null;
+  const get=id=>document.getElementById(id);
+  function updateTimer(){
+    get('timer').textContent=Math.floor(secondsLeft/60)+':'+String(secondsLeft%60).padStart(2,'0');
+    get('timer').classList.toggle('warning',secondsLeft<=10);
+  }
+  function makeQuestion(){
+    if(!running)return;
+    answered=false;
+    let a,b,op;
+    if(Math.random()<0.5){
+      a=Math.floor(Math.random()*11);
+      b=Math.floor(Math.random()*(21-a));
+      op='+';
+      correctAnswer=a+b;
+    }else{
+      a=Math.floor(Math.random()*21);
+      b=Math.floor(Math.random()*(a+1));
+      op='−';
+      correctAnswer=a-b;
+    }
+    get('question').textContent=a+' '+op+' '+b+' = ?';
+    const choices=[correctAnswer];
+    while(choices.length<4){
+      const n=Math.floor(Math.random()*21);
+      if(!choices.includes(n))choices.push(n);
+    }
+    choices.sort(()=>Math.random()-.5);
+    const container=get('answers');
+    container.innerHTML='';
+    container.classList.remove('inactive');
+    choices.forEach(n=>{
+      const btn=document.createElement('button');
+      btn.type='button';btn.className='answer';btn.textContent=n;
+      btn.addEventListener('click',()=>chooseAnswer(n,btn));
+      container.appendChild(btn);
+    });
+    get('feedback').textContent='Choose the correct answer!';
+  }
+  function chooseAnswer(n,button){
+    if(!running||answered)return;
+    if(n===correctAnswer){
+      score++;get('score').textContent=score;
+      get('feedback').textContent='Correct!';
+      answered=true;
+      get('answers').querySelectorAll('button').forEach(b=>b.disabled=true);
+      // Show a new question immediately after a correct answer.
+      setTimeout(()=>{if(running)makeQuestion();},250);
+    }else{
+      button.disabled=true;
+      get('feedback').textContent='Try again!';
+    }
+  }
+  function finish(){
+    running=false;clearInterval(interval);interval=null;secondsLeft=0;updateTimer();
+    get('question').textContent='Time is up!';
+    get('answers').innerHTML='';
+    get('answers').classList.add('inactive');
+    get('feedback').textContent='You scored '+score+' point'+(score===1?'':'s')+' in one minute. Well done!';
+    get('start').hidden=true;get('restart').hidden=false;
+  }
+  function start(){
+    clearInterval(interval);
+    score=0;secondsLeft=60;running=true;answered=false;
+    get('score').textContent='0';updateTimer();
+    get('start').hidden=true;get('restart').hidden=true;
+    makeQuestion();
+    interval=setInterval(()=>{
+      if(!running)return;
+      secondsLeft--;updateTimer();
+      if(secondsLeft<=0)finish();
+    },1000);
+  }
+  get('start').addEventListener('click',start);
+  get('restart').addEventListener('click',start);
+  updateTimer();
+})();
+</script>
+</main>
+</body>
+</html>
